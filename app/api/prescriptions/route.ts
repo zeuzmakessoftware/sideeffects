@@ -3,10 +3,20 @@ import { fetchBearerToken } from "./auth"
 
 const API_URL = "https://api.basic.tech/account/dd6a46ba-4d1e-415a-8c5a-f3f3930d4567/db/drugs"
 
+// Helper to extract Authorization Code from request headers
+const getAuthCode = (req: Request) => {
+  return req.headers.get("Authorization") || null
+}
+
 // GET request to fetch prescriptions
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const token = await fetchBearerToken()
+    const authCode = getAuthCode(req)
+    if (!authCode) {
+      return NextResponse.json({ error: "Missing Authorization Code" }, { status: 401 })
+    }
+
+    const token = await fetchBearerToken(authCode)
 
     const response = await fetch(API_URL, {
       method: "GET",
@@ -29,10 +39,17 @@ export async function GET() {
 // POST request to add a new prescription
 export async function POST(req: Request) {
   try {
-    const token = await fetchBearerToken()
+    const authCode = getAuthCode(req)
+    if (!authCode) {
+      return NextResponse.json({ error: "Missing Authorization Code" }, { status: 401 })
+    }
+
+    const token = await fetchBearerToken(authCode)
     const { name } = await req.json()
     if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 })
 
+    console.log(token)
+    console.log({ value: { name } })
     const response = await fetch(API_URL, {
       method: "POST",
       headers: {
@@ -56,7 +73,12 @@ export async function POST(req: Request) {
 // DELETE request to remove a prescription
 export async function DELETE(req: Request) {
   try {
-    const token = await fetchBearerToken()
+    const authCode = getAuthCode(req)
+    if (!authCode) {
+      return NextResponse.json({ error: "Missing Authorization Code" }, { status: 401 })
+    }
+
+    const token = await fetchBearerToken(authCode)
     const { id } = await req.json()
     if (!id) return NextResponse.json({ error: "ID is required" }, { status: 400 })
 

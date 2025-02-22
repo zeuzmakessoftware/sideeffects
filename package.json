@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@basictech/react": "^0.5.0",
+    "@browserai/browserai": "^1.0.29",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.4",

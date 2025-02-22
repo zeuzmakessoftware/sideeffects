@@ -1,67 +1,46 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Trash2 } from "lucide-react"
 
 export function UserPrescriptions() {
-  const [prescriptions, setPrescriptions] = useState<{ id: string, name: string }[]>([])
+  const [prescriptions, setPrescriptions] = useState<string[]>([])
   const [newDrug, setNewDrug] = useState("")
 
+  // Load prescriptions from localStorage on mount
   useEffect(() => {
-    const fetchPrescriptions = async () => {
-      try {
-        const response = await fetch("/api/prescriptions", { 
-            method: "GET",
-            headers: { "Authorization": `Bearer ${localStorage.getItem("token")}`}
-         })
-        if (!response.ok) throw new Error("Error fetching prescriptions")
-        const data = await response.json()
-        setPrescriptions(data || [])
-      } catch (error) {
-        console.error(error)
+    try {
+      const storedPrescriptions = localStorage.getItem("prescriptions")
+      if (storedPrescriptions) {
+        setPrescriptions(JSON.parse(storedPrescriptions))
       }
+    } catch (error) {
+      console.error("Failed to load prescriptions:", error)
     }
-
-    fetchPrescriptions()
   }, [])
 
-  const addPrescription = async () => {
-    if (newDrug.trim() === "") return
+  // Save prescriptions to localStorage whenever they change
+  useEffect(() => {
+    if (prescriptions.length > 0) {
+      localStorage.setItem("prescriptions", JSON.stringify(prescriptions))
+    } else {
+      localStorage.removeItem("prescriptions") // Cleanup when empty
+    }
+  }, [prescriptions])
 
-    try {
-      const response = await fetch("/api/prescriptions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newDrug.trim() }),
-      })
-
-      if (!response.ok) throw new Error("Error adding prescription")
-
-      const addedDrug = await response.json()
-      setPrescriptions([...prescriptions, { id: addedDrug.id, name: newDrug.trim() }])
+  const addPrescription = () => {
+    const trimmedDrug = newDrug.trim()
+    if (trimmedDrug !== "" && !prescriptions.includes(trimmedDrug)) {
+      setPrescriptions((prev) => [...prev, trimmedDrug])
       setNewDrug("")
-    } catch (error) {
-      console.error(error)
     }
   }
 
-  const removePrescription = async (id: string) => {
-    try {
-      const response = await fetch("/api/prescriptions", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      })
-
-      if (!response.ok) throw new Error("Error deleting prescription")
-
-      setPrescriptions(prescriptions.filter((drug) => drug.id !== id))
-    } catch (error) {
-      console.error(error)
-    }
+  const removePrescription = (index: number) => {
+    setPrescriptions((prev) => prev.filter((_, i) => i !== index))
   }
 
   return (
@@ -81,10 +60,10 @@ export function UserPrescriptions() {
             <Button onClick={addPrescription} disabled={!newDrug.trim()}>Add</Button>
           </div>
           <ul className="space-y-2">
-            {prescriptions.map((drug) => (
-              <li key={drug.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
-                {drug.name}
-                <Button variant="ghost" size="icon" onClick={() => removePrescription(drug.id)}>
+            {prescriptions.map((drug, index) => (
+              <li key={index} className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                {drug}
+                <Button variant="ghost" size="icon" onClick={() => removePrescription(index)}>
                   <Trash2 className="h-4 w-4 text-red-500" />
                 </Button>
               </li>
