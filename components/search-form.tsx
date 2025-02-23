@@ -7,7 +7,6 @@ import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { DrugInfoCard } from "@/components/drug-info-card"
-import { searchDrugInfo } from "@/lib/actions"
 
 export function SearchForm() {
   const [query, setQuery] = useState("")
@@ -15,17 +14,43 @@ export function SearchForm() {
   const [result, setResult] = useState<any>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
+    setResult(null)
+  
     try {
-      const data = await searchDrugInfo(query)
-      setResult(data)
+      const response = await fetch("/api/swag", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ input: query }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+  
+      const data = await response.json();
+  
+      let cleanedReport = typeof data.report === "string"
+        ? data.report.replace(/```json|```/g, "").trim()
+        : data.report;
+  
+      try {
+        cleanedReport = JSON.parse(cleanedReport);
+      } catch (error) {
+        console.warn("Report is not a valid JSON string:", cleanedReport);
+      }
+      console.log(cleanedReport)
+  
+      setResult(cleanedReport);
     } catch (error) {
-      console.error("Error fetching drug information:", error)
+      console.error("Error fetching drug information:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };  
 
   return (
     <div className="space-y-4">
@@ -52,4 +77,3 @@ Example: What are the common side effects of Wegovy when taken on an empty stoma
     </div>
   )
 }
-
