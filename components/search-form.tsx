@@ -18,7 +18,7 @@ export function SearchForm() {
     setResult(null)
 
     try {
-      const response = await fetch("/api/swag", {
+      const response = await fetch("/api/swag2", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

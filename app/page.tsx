@@ -4,20 +4,8 @@ import { SearchForm } from "@/components/search-form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SavedQueries } from "@/components/saved-queries"
 import { UserPrescriptions } from "@/components/UserPrescriptions"
-import { useEffect } from "react"
 
 export default function Home() {
-
-  useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get("code")
-    if (!code) {
-      window.location.href = "https://api.basic.tech/auth/authorize?response_type=code&client_id=dd6a46ba-4d1e-415a-8c5a-f3f3930d4567&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F"
-    }
-    else {
-      window.localStorage.setItem("token", code)
-    }
-  }, [])
-
   return (
     <main className="container mx-auto p-4 max-w-4xl">
       <div className="w-64 h-64 bg-purple-500 rounded-full absolute top-10 left-10 z-[-10] blur-[18em] opacity-50"></div>
