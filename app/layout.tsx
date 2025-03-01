@@ -8,8 +8,8 @@ const archivo = Archivo({
 })
 
 export const metadata: Metadata = {
-  title: 'SideEffect.MED',
-  description: 'swag',
+  title: 'SideRX',
+  description: 'SideRX',
 }
 
 export default function RootLayout({
