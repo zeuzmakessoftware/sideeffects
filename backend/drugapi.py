@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import duckdb
 import faiss
 import numpy as np
@@ -9,6 +10,8 @@ import json
 from helper_funcs import *
 
 app = Flask(__name__)
+
+CORS(app)
 
 # Prevent multiprocessing issues on Unix-based systems
 multiprocessing.set_start_method("spawn", force=True)
