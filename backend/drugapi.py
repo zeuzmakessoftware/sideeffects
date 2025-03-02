@@ -61,54 +61,35 @@ def search_database():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/get_warnings", methods=["POST"])
-def search_database():
-    # TODO do this by ID, not brandname
+@app.route("/get_property", methods=["POST"])
+def get_property_route():
     data = request.get_json()
     if not data or "drug" not in data:
         return jsonify({"error": "Missing required parameter: drug"}), 400
-    drug = data["drug"]
-    try:
-        with duckdb.connect('../db/labels2.db', read_only=True) as conn:
-            query = f"SELECT label FROM labels WHERE brandname = '{drug}'"
-            result = conn.execute(query).fetchall()
-            assert(len(result) == 1) # this assertion failing means brandname is not unique
-            json_label = json.loads(result[0])
-            assert(len(json_label) == 1) # this assertion failing means the label root node is not unique??
-            json_label = json_label[0]
-            struct = parse_structure(json_label)
-            warnings = get_property('WARNING', struct, max_properties=1) # make max properties a parameter for this API later 
-            ret_warn = []
-            for warn in warnings:
-                ret_warn.append(warn[1])
-                ret_warn.append(split_strip_join(clean_text_k(warn[0], 5)))
-            return jsonify(ret_warn)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
-@app.route("/get_indications", methods=["POST"])
-def search_database():
-    data = request.get_json()
-    if not data or "drug" not in data:
-        return jsonify({"error": "Missing required parameter: drug"}), 400
-    
     drug = data["drug"]
+    # Default to 'WARNING' if property is not provided.
+    prop = data.get("property", "WARNING")
+    max_properties = int(data.get("max_properties", 1))
     
     try:
         with duckdb.connect('../db/labels2.db', read_only=True) as conn:
             query = f"SELECT label FROM labels WHERE brandname = '{drug}'"
             result = conn.execute(query).fetchall()
-            assert(len(result) == 1) # this assertion failing means brandname is not unique
+            # Ensure the drug is unique
+            assert len(result) == 1, "Drug brandname is not unique"
             json_label = json.loads(result[0])
-            assert(len(json_label) == 1) # this assertion failing means the label root node is not unique??
+            assert len(json_label) == 1, "Label root node is not unique"
             json_label = json_label[0]
             struct = parse_structure(json_label)
-            warnings = get_property('INDICATIONS', struct, max_properties=1) # make max properties a parameter for this API later 
-            ret_warn = []
-            for warn in warnings:
-                ret_warn.append(warn[1])
-                ret_warn.append(split_strip_join(clean_text_k(warn[0], 5)))
-            return jsonify(ret_warn)
+            properties = get_property(prop, struct, max_properties=max_properties)
+            ret_prop = []
+            for entry in properties:
+                ret_prop.append({
+                    "title": entry[1],
+                    "text": split_strip_join(clean_text_k(entry[0], 5))
+                })
+            return jsonify(ret_prop)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
