@@ -110,14 +110,12 @@ def search_embeddings():
         query_vector = model.encode(search_query, convert_to_numpy=True).reshape(1, -1)
         
         with duckdb.connect("../db/vectors7.db", read_only=True) as conn:
-            db_results = conn.execute(f"SELECT id, vects, labelchk FROM embeddings WHERE drugname = '{drug_name_query}'").fetchall()
-        
+            query = f"SELECT id, vects, labelchk FROM embeddings WHERE drugname = '{drug_name_query[0]}'"
+            db_results = conn.execute(query).fetchall()
         if not db_results:
             return jsonify({"message": "No embeddings found in the database."})
-        
         vectors = np.array([row[1] for row in db_results], dtype='float32')
         labels = [row[2] for row in db_results]
-        
         index = faiss.IndexFlatIP(vectors.shape[1])
         index.add(vectors)
         _, top_k_indices = index.search(query_vector, k)
