@@ -78,7 +78,7 @@ def get_property_route():
     try:
         with duckdb.connect('../db/labels2.db', read_only=True) as conn:
             query = f"SELECT label FROM labels WHERE brandname = '{drug}'"
-            result = conn.execute(query).fetchall()
+            result = conn.execute(query).fetchall()[0]
             # Ensure the drug is unique
             assert len(result) == 1, "Drug brandname is not unique"
             json_label = json.loads(result[0])
